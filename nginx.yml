@@ -1,0 +1,26 @@
+# Author: Benjamin Harristhal
+---
+- hosts: all
+  tasks:
+    - name: build vagrant system
+      vagrant:
+        action: init-up 
+        name: nginx 
+        network: Wi-Fi
+        location: /tmp/vdc
+        template: ubuntu/trusty64
+      register: sys
+    - debug: var=sys
+    - name: wait for ssh port to come up
+      wait_for:
+        host: "{{sys.public_ip}}"
+        port: 22
+    - add_host: group=NewSystems hostname={{ sys.public_ip }} ansible_ssh_host={{ sys.public_ip }} ansible_ssh_user=vagrant ansible_ssh_pass=vagrant
+
+
+- hosts: NewSystems
+  tasks:   
+    - name: install nginx
+      become: yes
+      become_user: root
+      apt: name=nginx update_cache=yes
